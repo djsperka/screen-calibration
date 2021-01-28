@@ -1,6 +1,7 @@
 % all the vsg constants
 global CRS;
 
+
 % initialize spectral sensitivities from Baylor et al, Table 1
 % All wavelengths in nm.
 baylorLambda = [ 381 400 420 440 459 480 500 520 541 559 579 600 622 640 659 679 700 722 740 760 781 800 830 ];
@@ -11,6 +12,7 @@ lambdaMaxRed = 561;
 lambdaMaxGreen = 531;
 lambdaMaxBlue = 430;
 lambdaR = 561;
+a = [ -5.2734 -87.403 1228.4 -3346.3 -5070.3 30881 -31607 ];
 
 % init vsg and draw gray screen
 ret = vsgInit;
@@ -52,3 +54,20 @@ crsDrawRect([0 0], [crsGetScreenWidth() crsGetScreenHeight()]);
 [spdGreen qGreen] = PR670measspd([380 5 81], 'on');
 
 % now do fancy calculations.....
+
+
+
+
+
+function [logS] = computeLogS(lambda, lambda_m, lambda_r, a)
+%computeLogS Compute logS using polynomial defined in Baylor et al
+%   Sixth order polynomial and constants given in text of paper. 
+
+    logS = 0;
+    for i=0:6
+        logS = logS + a(i+1)*(log(lambda_m/(lambda*lambda_r)))^i;
+    end
+    
+end
+
+
