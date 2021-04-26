@@ -11,3 +11,17 @@ function [M, cones, Y] = aatest(B, myS)
     M = T_cones * B;  % this is 3x3
     cones = T_cones;
     Y = T_Y;
+    
+    
+    %% Basic transformation matrices.  ComputeDKL_M() does the work.
+    %
+    % Get matrix that transforms between incremental
+    % cone coordinates and DKL coordinates 
+    % (Lum, RG, S).
+    [M_ConeIncToDKL,LMLumWeights] = ComputeDKL_M(bgLMS,T_cones,T_Y);
+    M_DKLToConeInc = inv(M_ConeIncToDKL);
+
+    %% Find incremental cone directions corresponding to DKL isoluminant directions.
+    rgConeInc = M_DKLToConeInc*[0 1 0]';
+    sConeInc = M_DKLToConeInc*[0 0 1]';
+
