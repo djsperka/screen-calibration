@@ -1,6 +1,7 @@
 function cal = CalibrateVSGDrvr(whichMeterType)
 % cal = CalibrateMonDrvr(cal,USERPROMPT,whichMeterType,blankOtherScreen)
-%
+% Must initialize spectrometer prior to calling, e.g. PR670init or
+% whatever.
 
 cal = initVSGCalStruct();
 
@@ -17,108 +18,27 @@ if cal.manual.use
     %CalibrateManualDrvr;
 end
 
-% User prompt
-fprintf('Focus radiometer on the displayed box.\n');
-fprintf('Once meter is set up, hit any key - you will get %g seconds\n',...
-         cal.describe.leaveRoomTime);
-fprintf('to leave room.\n');
-
 % init vsg
+fprintf('Initializing VSG, turn off gamma correction...\n');
 global CRS;
 if ~isstruct(CRS)
   crsLoadConstants;
 end
 vsgInit;
+crsSetVideoMode(CRS.EIGHTBITPALETTEMODE + CRS.NOGAMMACORRECT);
 
 % draw box on vsg screen
 calDispPatch(0, 0);
 calDispPatch([.5,.5,.5]);
 
 % Wait for user
-fprintf('Set up radiometer and hit any key when ready\n');
-KbStrokeWait(-1);
+input('Focus radiometer on box and hit Enter when ready...', 's');
+%KbStrokeWait(-1); requires Screen(). 
 fprintf('Pausing for %d seconds ...', cal.describe.leaveRoomTime);
 WaitSecs(cal.describe.leaveRoomTime);
 fprintf(' done\n');
 
 
-
-% 
-% 
-% % Setup screen to be measured
-% % ---------------------------
-% 
-% % Prepare imaging pipeline for Bits+ Bits++ CLUT mode, or DataPixx/ViewPixx
-% % L48 CLUT mode (which is pretty much the same). If such a special output
-% % device is used, the Screen('LoadNormalizedGammatable', win, clut, 2);
-% % command uploads 'clut's into the device at next Screen('Flip'), taking
-% % care of possible graphics driver bugs and other quirks:
-% PsychImaging('PrepareConfiguration');
-% 
-% if g_usebitspp == 1
-%     % Setup for Bits++ CLUT mode. This will automatically load proper
-%     % identity gamma tables into the graphics hardware and into the Bits+:
-%     PsychImaging('AddTask', 'General', 'EnableBits++Bits++Output');
-% end
-% 
-% if g_usebitspp == 2
-%     % Setup for DataPixx/ViewPixx etc. L48 CLUT mode. This will
-%     % automatically load proper identity gamma tables into the graphics
-%     % hardware and into the device:
-%     PsychImaging('AddTask', 'General', 'EnableDataPixxL48Output');
-% end
-% 
-% % Open the window:
-% [window, screenRect] = PsychImaging('OpenWindow', cal.describe.whichScreen);
-% if (cal.describe.whichScreen == 0)
-%     HideCursor;
-% end
-% 
-% theClut = zeros(256,3);
-% if g_usebitspp
-%     % Load zero theClut into device:
-%     Screen('LoadNormalizedGammaTable', window, theClut, 2);
-%     Screen('Flip', window);    
-% else
-%     % Load zero lut into regular graphics card:
-%     Screen('LoadNormalizedGammaTable', window, theClut);
-% end
-% 
-% % Draw a box in the center of the screen
-% if ~isfield(cal.describe, 'boxRect')
-% 	boxRect = [0 0 cal.describe.boxSize cal.describe.boxSize];
-% 	boxRect = CenterRect(boxRect,screenRect);
-% else
-% 	boxRect = cal.describe.boxRect;
-% end
-% theClut(2,:) = [1 1 1];
-% Screen('FillRect', window, 1, boxRect);
-% if g_usebitspp
-%     Screen('LoadNormalizedGammaTable', window, theClut, 2);
-%     Screen('Flip', window, 0, 1);
-% else
-%     Screen('LoadNormalizedGammaTable', window, theClut);
-% end
-% 
-% % Wait for user
-% if USERPROMPT == 1
-%     fprintf('Set up radiometer and hit any key when ready\n');
-%     KbStrokeWait(-1);
-%     fprintf('Pausing for %d seconds ...', cal.describe.leaveRoomTime);
-%     WaitSecs(cal.describe.leaveRoomTime);
-%     fprintf(' done\n');
-% end
-% 
-% % Put correct surround for measurements.
-% theClut(1,:) = cal.bgColor';
-% if g_usebitspp
-%     Screen('FillRect', window, 1, boxRect);
-%     Screen('LoadNormalizedGammaTable', window, theClut, 2);
-%     Screen('Flip', window, 0, 1);
-% else
-%     Screen('LoadNormalizedGammaTable', window, theClut);
-% end
-% 
 % Start timing
 t0 = clock;
 
