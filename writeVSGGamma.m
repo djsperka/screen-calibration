@@ -169,6 +169,9 @@ lums = sort([bgLum rgPlusLum rgMinusLum sPlusLum sMinusLum]);
 fprintf('Luminance range in isoluminant plane is %0.2f to %0.2f\n',...
 	lums(1), lums(end));
 
+%% convert clut values to short int - int16 - for visage consumption later. 
+ shortClutValues = int16( int32(clutValues * 65536) - 32768 );
+
 
 %% dump to file
 outfile = fullfile(frompath, basename+".vsg");
@@ -178,7 +181,7 @@ fwrite(fid, rgPlusPrimary, "double");
 fwrite(fid, rgMinusPrimary, "double");
 fwrite(fid, sPlusPrimary, "double");
 fwrite(fid, sMinusPrimary, "double");
-fwrite(fid, clutValues(1,:)', "double");
-fwrite(fid, clutValues(2,:)', "double");
-fwrite(fid, clutValues(3,:)', "double");
+fwrite(fid, shortClutValues(1,:)', "int16");
+fwrite(fid, shortClutValues(2,:)', "int16");
+fwrite(fid, shortClutValues(3,:)', "int16");
 fclose(fid);
