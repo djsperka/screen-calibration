@@ -1,7 +1,13 @@
 function [clutValues] = writeVSGGamma(calfile)
-% myCalDemo
+% writeVSGGamma
 %
-% Demonstrates basic use of the PsychCal calibraiton structure and routines.
+% Reads a calibration file, then generates inverse-gamma table values, as
+% well as a set of 5 colors that define a DKL isolumunant plane ("white 
+% point", extremes along rg-axis, and along s-axis. The points are written
+% first, as rgb values in [0,1]. The inv gamma table is written as 16384
+% unsigned short, values between 0 and 65534 (2^16-2 - this confirmed in 
+% email from CRS)
+% 
 %
 % See also PsychCal, DKLDemo, RenderDemo, DumpMonCalSpd
 %
@@ -169,9 +175,14 @@ lums = sort([bgLum rgPlusLum rgMinusLum sPlusLum sMinusLum]);
 fprintf('Luminance range in isoluminant plane is %0.2f to %0.2f\n',...
 	lums(1), lums(end));
 
-%% convert clut values to short int - int16 - for visage consumption later. 
- shortClutValues = int16( int32(clutValues * 65536) - 32768 );
-
+%% convert clut values to unsigned short int - uint16 - for visage consumption later. 
+% Visage accepts values between 0 and 65534 (2^16 - 2). (Strange number, but
+% this was told to me by CRS support.) Notice that I multiply by 65535,
+% then check whether anything is over. This ensures that the highest bin
+% has something in it.
+%shortClutValues = int16( int32(clutValues * 65536) - 32768 );
+ushortClutValues = uint16( uint32(clutValues * 65535) );
+ushortClutValues(find(ushortClutValues>65534)) = 65534;
 
 %% dump to file
 outfile = fullfile(frompath, basename+".vsg");
@@ -181,7 +192,7 @@ fwrite(fid, rgPlusPrimary, "double");
 fwrite(fid, rgMinusPrimary, "double");
 fwrite(fid, sPlusPrimary, "double");
 fwrite(fid, sMinusPrimary, "double");
-fwrite(fid, shortClutValues(1,:)', "int16");
-fwrite(fid, shortClutValues(2,:)', "int16");
-fwrite(fid, shortClutValues(3,:)', "int16");
+fwrite(fid, ushortClutValues(1,:)', "uint16");
+fwrite(fid, ushortClutValues(2,:)', "uint16");
+fwrite(fid, ushortClutValues(3,:)', "uint16");
 fclose(fid);
