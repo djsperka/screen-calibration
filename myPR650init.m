@@ -1,4 +1,4 @@
-function retval = PR650init(portNumber, enableHandshaking)
+function retval = myPR650init(portNumber, enableHandshaking)
 % retval = PR650init(portNumber, [enableHandshaking])
 % 
 % Initialize serial port for talking to colorimeter.
@@ -40,6 +40,7 @@ if isempty(g_serialPort)
   g_serialPort = hPort;
 end
 
+WaitSecs(3.0);
 StartTime = GetSecs;
 
 % Send set backlight command to high level to check
@@ -48,15 +49,17 @@ StartTime = GetSecs;
 %fprintf(1, 'Write backlight command.\n');
 %IOPort('write', g_serialPort, ['B2' char(10)]);
 
-fprintf(1, 'Write D110 command.\n');
-IOPort('write', g_serialPort, ['b3' char(13) char(10)]);
-%IOPort('write', g_serialPort, ['D110' char(10)]);
+fprintf(1, 'Write m5 command.\n');
+IOPort('write', g_serialPort, ['m5' char(10)]);
+%IOPort('write', g_serialPort, ['D110' char(13)]);
 %IOPort('write', g_serialPort, ['S' char(10)]);
 
-
 % Make sure the meter responds.
+fprintf('now read response...\n');
+stmp = input('hit enter to read', 's');
 retval = [];
 %while isempty(retval) && GetSecs-StartTime < 10
+StartTime = GetSecs;
 while GetSecs-StartTime < 10
   retval = PR650serialread;
 end
