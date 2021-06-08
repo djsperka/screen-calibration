@@ -1,5 +1,5 @@
-function [] = myPR650close()
-%MYPR650CLOSE Close serial connection to PR650.
+function [] = old650close()
+%OLD650CLOSE Close serial connection to PR650.
 %   If the PR650 has been opened, the the spectrometer is reset, and the 
 %   serial connection is terminated.
 
