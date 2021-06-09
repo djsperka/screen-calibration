@@ -20,7 +20,6 @@ readStr = old650getresult(10, 1);
 if length(readStr) == 0
   error('No response after measure command');
 end
-fprintf('response: %s\n', readStr);
 
 % Parse return
 qual = -1;
@@ -29,9 +28,9 @@ if count == 2
   qual = raw(1);
   freq = raw(2);
 end
-
 if qual ~= 0
   freq = [];
+  fprintf('Got bad quality code (%d) getting sync freq.\n', qual);
 end
 
 

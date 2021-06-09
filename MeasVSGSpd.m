@@ -1,4 +1,4 @@
-function [spd,S] = MeasMonSpd(settings, S, syncMode, whichMeterType)
+function [spd,S] = MeasVSGSpd(settings, S, syncMode, whichMeterType)
 % [spd,S] = MeasMonSpd(window, settings, [S], [syncMode], [whichMeterType], [bitsppClut])
 %MeasVSGSpd([0 0 0]', cal.describe.S, 0, whichMeterType);
 % Measure the Spd of a series of monitor settings.
@@ -47,8 +47,8 @@ for i = 1:nMeas
     calDispPatch(settings(:, i)');
 
     % Measure spectrum
-    if (whichMeterType < 0)
-        WaitSecs(0.2);
+    if (whichMeterType == 1)
+        spd(:, i) = old650measspd();
     else
         spd(:,i) = MeasSpd(S, whichMeterType, syncMode);
     end

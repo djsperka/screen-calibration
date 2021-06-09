@@ -14,17 +14,14 @@ if nargin < 2 || isempty(S)
 	S = [380 5 81];
 end
 
-readCharVec = '';
-if isstring(readStr)
-    readCharVec = convertStringsToChars(readStr);
-else
-    readCharVec = readStr;
+if ~isstring(readStr)
+    error('Expecting string array');
 end
 
-istart = strfind(readStr,'0380.');
-
-for k= 1:101
-	spd(k) = str2num(readCharVec(istart+6+15*(k-1):istart+15*k-1));
+spd = zeros(1, 101);
+for k=1:101
+    s = sscanf(readStr(k+2), '%f,%f');
+	spd(k) = s(2);
 end
 
 % Convert to our units standard.
