@@ -42,11 +42,21 @@ This whole process takes approximately 45 minutes. Most of that is in the color 
 
 ### Initialize spectrometer
 
-```>> PR670init
+This step depends on the spectrometer. For the newer PR670, the PTB functions will work fine:
+
+```
+>> PR670init
 
 ans =
 
     ' REMOTE MODE'
+```
+
+For the PR650, the PTB functions do not work (there is a folder of PR650 functions under PsychHardware/, but they appear to be copies of PR670 functions and do not work. The communication protocol seems to have changed with the PR655 and subsequent models. So, I have rewritten a subset of the PTB functionality and spliced it into our calibration function. To initialize the PR650:
+
+```
+>> old650init('com1');
+>>
 ```
 
 ### Run main calibration
@@ -124,6 +134,22 @@ making measurement 1..., color (0, 0, 0)
 making measurement 1..., color (0, 0, 0)
 CalibrateAmbDrvr measurements took 1.55238 minutes
 ```
+
+#### Warning messages during calibration with PR650
+
+The PR650 doesn't do as well as the PR670 in low light conditions. In particular, the sync frequency is harder to obtain, and it often fails during the calibration. The measurement function old650measspd will turn off sync when this happens and still makes the measurement. The warnings look like this:
+
+```
+making measurement 8..., color (0, 0, 0.25)
+Got bad quality code (20) getting sync freq.
+Cannot sync, will measure without sync
+Warning: The specified amount of data was not returned within the Timeout period for 'readline'.
+'serialport' unable to read any data. For more information on possible reasons, see serialport Read Warnings. 
+```
+
+The _"Cannot sync"_ error has to do with the low light conditions. 
+
+The timeout warning happens on some of the serial reads and can be ignored. TODO - these can be fixed so they don't happen. 
 
 ### Save calibration file
 
