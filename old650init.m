@@ -34,10 +34,18 @@ if isempty(g_650) || ~isvalid(g_650)
 
     % read response
     line = old650getresult(30, 1);
+    
+    % pause a second
+    pause(1);
+    
+    % now turn off backlight
+    writeline(g_650, 'B0');
+    line0 = old650getresult(30, 1);
+    
 
 end
 
-if (contains(line, '000'))
+if (contains(line(1), "000") && contains(line0(1), "000"))
     retval = 1;
 end
 return;
