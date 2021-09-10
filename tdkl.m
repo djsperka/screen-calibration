@@ -1,45 +1,20 @@
-function tdkl(calfile, bkgd)
-% myDKLDemo
+function tdkl(altbkgd, calfile, bkgd)
+% tdkl - find RGB color combinations in an isoluminant plane defined by an
+% input color. 
 %
-% Demonstrates the DKL color space routines.
-% Produces a picture of the DKL isoluminant plane
-% in a figure window.  This picture is not calibrated.
+% Computes DKL conversion matrix using the background color 'bkgd' (1x3) 
+% and calibration file arguments. 
+% Using that matrix, creates a figure of the isoluminant 
+% plane defined by the color 'altbkgd'. User may select points on the
+% figure (click on the figure, then hit Enter), and the corresponding RGB
+% is printed. To end, hit Enter without clicking on a point in the figure.
 %
-% You can chooose the image size and what cone/luminance
-% data you want to use to define the space.
-%
-% 4/9/05	dhb		Wrote it.
-% 5/26/11   dhb     Updated to use PTB3TestCal, SetSensorColorSpace
-%           dhb     Remove OS9 option.
-% 4/13/17   dhb     Switch default cone type to Stockman-Sharpe.
-%                   Demonstrate conversion from cone contrast coords to
-%                   DKL, code at end.
-
 
 %% Define parameters.  Image size should be an odd number.
 imageSize = 513;
 whichCones = 'StockmanSharpe';
 
-% Load spectral data and set calibration file
-% switch (whichCones)
-% 	case 'SmithPokorny',
-% 		load T_cones_sp
-% 		load T_xyzJuddVos
-% 		S_cones = S_cones_sp;
-% 		T_cones = T_cones_sp;
-% 		T_Y = 683*T_xyzJuddVos(2,:);
-% 		S_Y = S_xyzJuddVos;
-% 		T_Y = SplineCmf(S_Y,T_Y,S_cones);
-% 	case 'StockmanSharpe'
-% 		load T_cones_ss2
-% 		load T_ss2000_Y2
-% 		S_cones = S_cones_ss2;
-% 		T_cones = T_cones_ss2;
-% 		T_Y = 683*T_ss2000_Y2;
-% 		S_Y = S_ss2000_Y2;
-% 		T_Y = SplineCmf(S_Y,T_Y,S_cones);
-% end
-
+% load files of constants
 load T_cones_ss2
 load T_ss2000_Y2
 S_cones = S_cones_ss2;
@@ -64,10 +39,11 @@ calLMS = SetGammaMethod(calLMS,1);
 calLum = SetSensorColorSpace(cal,T_Y,S_Y);
 
 %% Background input is RGB, here convert to LMS. 
-% In ptb, 'Primary' seems to refer to RGB. The 'Sensor' coordinates are
+% In ptb, 'Primary' refers to RGB, the primary colors used by the monitor. 
+% The 'Sensor' coordinates are
 % what the calibration object has been set to use (see SetSensorColorSpace
 % call above). 
-bgLMS = PrimaryToSensor(calLMS, bkgd')
+bgLMS = PrimaryToSensor(calLMS, bkgd');
 
 %% Basic transformation matrices.  ComputeDKL_M() does the work.
 %
@@ -75,8 +51,9 @@ bgLMS = PrimaryToSensor(calLMS, bkgd')
 % cone coordinates and DKL coordinates 
 % (Lum, RG, S).
 %
-% DJS: "incremental cone coordinates" - I think "incremental" means
-% relative to the bkgd point, incremental steps in the isoluminant plane.
+% DJS: "incremental cone coordinates" - Think "incremental"  as the
+% change (inc or decrement) relative to the bkgd point. To get inc cone
+% coords, get LMS, and subtract bgLMS.
 
 [M_ConeIncToDKL,LMLumWeights] = ComputeDKL_M(bgLMS,T_cones,T_Y);
 M_DKLToConeInc = inv(M_ConeIncToDKL);
@@ -89,7 +66,17 @@ sConeInc = M_DKLToConeInc*[0 0 1]';
 % need to scale them.  Here we'll find units so that 
 % a unit excursion in the two directions brings us to
 % the edge of the monitor gamut, with a little headroom.
-bgPrimary = SensorToPrimary(calLMS,bgLMS)
+
+% DJS here is where I modify the demo script to make an isoluminant plane
+% at the luminance of an arbitrary color.
+% This block replaces the commented block below. Goal is to make rgConeInc
+% and sConeInc, which will maximize the available gamut at the given
+% luminance. Only change here is to set bgLMS to be the alternate/target
+% color instead of the given background for the DKL space. 
+
+bgLMS = PrimaryToSensor(calLMS, altbkgd');
+
+bgPrimary = SensorToPrimary(calLMS,bgLMS);
 rgPrimaryInc = SensorToPrimary(calLMS,rgConeInc+bgLMS)-bgPrimary;
 sPrimaryInc = SensorToPrimary(calLMS,sConeInc+bgLMS)-bgPrimary;
 rgScale = MaximizeGamutContrast(rgPrimaryInc,bgPrimary);
@@ -127,6 +114,15 @@ lums = sort([bgLum rgPlusLum rgMinusLum sPlusLum sMinusLum]);
 fprintf('Luminance range in isoluminant plane is %0.2f to %0.2f\n',...
 	lums(1), lums(end));
 
+fprintf('target color %f %f %f lum %f\n', bgPrimary(1), bgPrimary(2), bgPrimary(2), PrimaryToSensor(calLum, bgPrimary));
+fprintf('rgConeInc %f %f %f\n', rgConeInc(1), rgConeInc(2), rgConeInc(3));
+fprintf('sConeInc %f %f %f\n', sConeInc(1), sConeInc(2), sConeInc(3));
+
+
+
+
+
+
 %% Make a picture
 %
 % Now we have the coordinates we desire, make a picture of the
@@ -146,10 +142,17 @@ theImage = zeros(imageSize,imageSize,3);
 theImage(:,:,1) = rPlane;
 theImage(:,:,2) = gPlane;
 theImage(:,:,3) = bPlane;
-size(theImage)
 
 % Show the image for illustrative purposes
 figure; clf; image(theImage);
 
+fprintf('Select a point in the figure.\n');
+[x, y] = ginput(1);
+while ~isempty(x)
+    rgb = SensorToPrimary(calLMS, bgLMS + (x-257)/256 * rgConeInc + (y-257)/256 * sConeInc);
+    fprintf('RGB is %f,%f,%f lum is %f\n', rgb(1), rgb(2), rgb(3), PrimaryToSensor(calLum, rgb));
+    fprintf('\nSelect another point in the figure (hit return without selecting point to quit).\n');
+    [x, y] = ginput(1);
+end
 
 
