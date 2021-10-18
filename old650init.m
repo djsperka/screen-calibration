@@ -20,7 +20,7 @@ retval=0;
 line=[];
 % Only open if we haven't already.
 if isempty(g_650) || ~isvalid(g_650)
-    g_650 = serialport('com1', 9600, 'Timeout', 5);
+    g_650 = serialport(comPort, 9600, 'Timeout', 5);
     configureTerminator(g_650, 'CR/LF', 'CR');
 
     % put into remote mode
