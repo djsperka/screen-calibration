@@ -1,7 +1,10 @@
-function [] = validateVSGGamma(comport)
+function [lumR,lumG,lumB,lumW] = validateVSGGamma()
 %validateVSGGamma Validates linearity of current monitor using fixstim
 %(connect via tcp) and spectrometer. 
-%   Detailed explanation goes here
+%   Spectrometer assumed to be connected (you call old650init prior)
+
+% allow pausing
+pause('on');
 
 % load files of constants
 load T_cones_ss2
@@ -12,41 +15,43 @@ T_Y = 683*T_ss2000_Y2;
 S_Y = S_ss2000_Y2;
 
 % Assuming old650, which gives us its spd with [390 5 81]
+% Use this to compute lum from spd. 
 T_Y81 = SplineCmf(S_Y,T_Y,[390 5 81]);
 
-% attempt connection with fixstim. Response to connection should be "HELLO"
-tcp = tcpclient("127.0.0.1", 7001);
-resp = char(read(tcp));
+% values to test
+values = [0:.1:1]';
+r=zeros(length(values),3);
+g=zeros(length(values),3);
+b=zeros(length(values),3);
+w=zeros(length(values),3);
+r(:,1) = values;
+g(:,2) = values;
+b(:,3) = values;
+w(:,1) = values;
+w(:,2) = values;
+w(:,3) = values;
 
-% initialize spectrometer
-old650init(comport);
 
-% talk to fixstim
+fprintf(1,'Pausing for 10 sec...');
+pause(10);
+
+% talk to fixstim. there is no response here. TODO.
+fprintf(1, 'Talking to fixstim...\n');
 u = udpport;
 write(u, 'tcp 7001', 'localhost', 7000);
+pause(1);
 
+% attempt connection with fixstim. Response to connection should be "HELLO"
+
+fprintf(1, 'Start sending commands.\n');
 tcp=tcpclient('localhost', 7001);
 resp = char(read(tcp));
 fprintf(1, 'tcp connection resp: %s\n', resp);
 
-
-
-r=zeros(11,3);
-g=zeros(11,3);
-b=zeros(11,3);
-w=zeros(11,3);
-r(:,1) = 0:.1:1;
-g(:,2) = 0:.1,1;
-b(:,3) = 0:.1:1;
-w(:,1) = 0:.1:1;
-w(:,2) = 0:.1:1;
-w(:,3) = 0:.1:1;
-
-
-spdRed = measure_spd(tcp, r);
-spdGreen = measure_spd(tcp, g);
-spdBlue = measure_spd(tcp, b);
-spdWhite = measure_spd(tcp, w);
+lumR = measure_lum(tcp, r, T_Y81);
+lumG = measure_lum(tcp, g, T_Y81);
+lumB = measure_lum(tcp, b, T_Y81);
+lumW = measure_lum(tcp, w, T_Y81);
 
 % quit connection to fixstim
 write(tcp, 'quit;');
@@ -54,11 +59,11 @@ fprintf(1, 'Closed connection with fixstim: %s\n', char(read(tcp)));
 
 % plot
 figure;
-plot([0:.1:1.0], spdRed, 'r', T_Y81);
+plot(values, lumR, 'r');
 hold on;
-plot([0:.1:1.0], spdGreen, 'g', T_Y81);
-plot([0:.1:1.0], spdBlue, 'b', T_Y81);
-plot([0:.1:1.0], spdWhite, 'k', T_Y81);
+plot(values, lumG, 'g');
+plot(values, lumB, 'b');
+plot(values, lumW, 'k');
 hold off;
 
 end
@@ -69,11 +74,13 @@ function [lum] = measure_lum(tcp, colors, T)
     lum = zeros(size(colors, 1), 1);
     for i=1:size(colors, 1)
 
-        cmd = sprintf('b [%f/%f/%f];', rgbw(i,1), rgbw(i,2), rgbw(i,3));
+        cmd = sprintf('b [%f/%f/%f];', colors(i,1), colors(i,2), colors(i,3));
+        fprintf(1,'vsg command: %s\n', cmd);
         write(tcp, cmd);
         resp = char(read(tcp));
-        [spd, qual] = old650meassspd();
-        lum(i) = T_Y81 * spd;
+        pause(0.5);
+        [spd, qual] = old650measspd();
+        lum(i) = T * spd;
         fprintf(1, 'color %s, resp %s lum %f\n', cmd, resp, lum(i));
     
     end
