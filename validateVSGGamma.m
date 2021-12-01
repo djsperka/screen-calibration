@@ -38,21 +38,21 @@ pause(10);
 % talk to fixstim. Should check response HELLO. TODO.
 fprintf(1, 'Connect to fixstim control port...\n');
 tcp0 = tcpclient('localhost', 7000);
-configureTerminator(tcp0, ';', 26);
+configureTerminator(tcp0, 59, 26);
 resp = char(readline(tcp0));
 fprintf(1, 'control port connection resp: %s\n', resp);
 
-data = [uint8('tcp 7001')];
-write(tcp0, data);
+cmd = 'tcp 7001';
+writeline(tcp0, cmd);
 pause(1);
 clear tcp0;
 
-% attempt connection with fixstim. Response to connection should be "HELLO"
+% attempt connection with fixstim. Response to connection should be "HELLO;"
 
 fprintf(1, 'Start sending commands.\n');
 tcp=tcpclient('localhost', 7001);
-configureTerminator(tcp, ';', ';');
-resp = char(read(tcp));
+configureTerminator(tcp, 59, 59);
+resp = char(readline(tcp));
 fprintf(1, 'tcp connection resp: %s\n', resp);
 
 lumR = measure_lum(tcp, r, T_Y81);
@@ -61,8 +61,8 @@ lumB = measure_lum(tcp, b, T_Y81);
 lumW = measure_lum(tcp, w, T_Y81);
 
 % quit connection to fixstim
-write(tcp, 'quit;');
-fprintf(1, 'Closed connection with fixstim: %s\n', char(read(tcp)));
+writeline(tcp, 'quit');
+fprintf(1, 'Closed connection with fixstim: %s\n', char(readline(tcp)));
 
 % plot
 figure;
@@ -81,10 +81,10 @@ function [lum] = measure_lum(tcp, colors, T)
     lum = zeros(size(colors, 1), 1);
     for i=1:size(colors, 1)
 
-        cmd = sprintf('b [%f/%f/%f];', colors(i,1), colors(i,2), colors(i,3));
+        cmd = sprintf('b [%f/%f/%f]', colors(i,1), colors(i,2), colors(i,3));
         fprintf(1,'vsg command: %s\n', cmd);
-        write(tcp, cmd);
-        resp = char(read(tcp));
+        writeline(tcp, cmd);
+        resp = char(readline(tcp));
         pause(0.5);
         [spd, qual] = old650measspd();
         lum(i) = T * spd;
