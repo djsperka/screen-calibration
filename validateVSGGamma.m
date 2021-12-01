@@ -35,16 +35,23 @@ w(:,3) = values;
 fprintf(1,'Pausing for 10 sec...');
 pause(10);
 
-% talk to fixstim. there is no response here. TODO.
-fprintf(1, 'Talking to fixstim...\n');
-u = udpport;
-write(u, 'tcp 7001', 'localhost', 7000);
+% talk to fixstim. Should check response HELLO. TODO.
+fprintf(1, 'Connect to fixstim control port...\n');
+tcp0 = tcpclient('localhost', 7000);
+configureTerminator(tcp0, ';', 26);
+resp = char(readline(tcp0));
+fprintf(1, 'control port connection resp: %s\n', resp);
+
+data = [uint8('tcp 7001')];
+write(tcp0, data);
 pause(1);
+clear tcp0;
 
 % attempt connection with fixstim. Response to connection should be "HELLO"
 
 fprintf(1, 'Start sending commands.\n');
 tcp=tcpclient('localhost', 7001);
+configureTerminator(tcp, ';', ';');
 resp = char(read(tcp));
 fprintf(1, 'tcp connection resp: %s\n', resp);
 
