@@ -36,8 +36,12 @@ if ~isstruct(CRS)
   crsLoadConstants;
 end
 vsgInit;
-crsSetDrawPage(1);  % after init, display page=1, draw page = 2. Don't care
-                    % about flipping here. 
+pause('on');
+pause(2);
+pause('off');
+
+displayPage = 1;
+drawPage = 2;
 
 % load gamma table, then set mode
 fprintf('Read gamma table from %s\n', strcat(p.Results.gamma, ".vsg"));
@@ -75,6 +79,13 @@ for irow=1:size(colors, 1)
     M(:, :, 2) = c(2);
     M(:, :, 3) = c(3);
     crsDrawMatrix24bitColour(M);
+    
+    % page is drawn, flip page.
+    crsSetDisplayPage(drawPage);
+    crsSetDrawPage(displayPage);
+    tmp = displayPage;
+    displayPage = drawPage;
+    drawPage = tmp;
     
     if p.Results.pr650
         [spd, qual] = old650measspd();
