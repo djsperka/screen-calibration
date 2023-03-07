@@ -1,4 +1,4 @@
-function [clutValues] = writeVSGGamma(calfile)
+function [clutValues] = writeVSGGamma(calfile, bg)
 % writeVSGGamma
 %
 % Reads a calibration file, then generates inverse-gamma table values, as
@@ -58,6 +58,16 @@ linearValues = ones(3,1)*linspace(0,1,16384);
 clutValues = PrimaryToSettings(calStructOBJ,linearValues);
 predValues = SettingsToPrimary(calStructOBJ,clutValues);
 
+%% convert clut values to unsigned short int - uint16 - for visage consumption later. 
+% Visage accepts values between 0 and 65534 (2^16 - 2). (Strange number, but
+% this was told to me by CRS support.) Notice that I multiply by 65535,
+% then check whether anything is over. This ensures that the highest bin
+% has something in it.
+%shortClutValues = int16( int32(clutValues * 65536) - 32768 );
+ushortClutValues = uint16( uint32(clutValues * 65535) );
+ushortClutValues(find(ushortClutValues>65534)) = 65534;
+
+
 % Make a plot of the inverse lookup table.
 figure; clf;
 subplot(1,3,1); hold on
@@ -101,8 +111,7 @@ ylabel('Predicted value');
 title('Gamma Correction');
 
 
-
-%% load cones
+%% load cmf for cones and luminance
 load T_cones_ss2
 load T_ss2000_Y2
 S_cones = S_cones_ss2;
@@ -112,14 +121,13 @@ S_Y = S_ss2000_Y2;
 T_Y = SplineCmf(S_Y,T_Y,S_cones);
 
 
-
+%% set up conversions to LMS and Lum space.
 calLMS = SetSensorColorSpace(cal,T_cones,S_cones);
 calLMS = SetGammaMethod(calLMS,1);
 calLum = SetSensorColorSpace(cal,T_Y,S_Y);
 
-%% Define background.  Here we just take the
-% monitor mid-point.
-bgLMS = PrimaryToSensor(calLMS,[0.5 0.5 0.5]');
+%% Convert background to LMS.
+bgLMS = PrimaryToSensor(calLMS, bg);
 
 %% Basic transformation matrices.  ComputeDKL_M() does the work.
 %
@@ -175,23 +183,29 @@ lums = sort([bgLum rgPlusLum rgMinusLum sPlusLum sMinusLum]);
 fprintf('Luminance range in isoluminant plane is %0.2f to %0.2f\n',...
 	lums(1), lums(end));
 
-%% convert clut values to unsigned short int - uint16 - for visage consumption later. 
-% Visage accepts values between 0 and 65534 (2^16 - 2). (Strange number, but
-% this was told to me by CRS support.) Notice that I multiply by 65535,
-% then check whether anything is over. This ensures that the highest bin
-% has something in it.
-%shortClutValues = int16( int32(clutValues * 65536) - 32768 );
-ushortClutValues = uint16( uint32(clutValues * 65535) );
-ushortClutValues(find(ushortClutValues>65534)) = 65534;
+
+%% Get color vectors
+[lcv, mcv, scv] = computeConeIsoCV(cal, T_cones, S_cones, bg);
+
 
 %% dump to file
 outfile = fullfile(frompath, basename+".vsg");
 fid = fopen(outfile, "w");
+fwrite(fid, 'zz01', 'char');    % This will indicate whether the gamma file has the color vectors.
 fwrite(fid, bgPrimary, "double");
 fwrite(fid, rgPlusPrimary, "double");
 fwrite(fid, rgMinusPrimary, "double");
 fwrite(fid, sPlusPrimary, "double");
 fwrite(fid, sMinusPrimary, "double");
+
+% These are the color vectors
+fwrite(fid, lcv(:,1), "double");
+fwrite(fid, lcv(:,2), "double");
+fwrite(fid, mcv(:,1), "double");
+fwrite(fid, mcv(:,2), "double");
+fwrite(fid, scv(:,1), "double");
+fwrite(fid, scv(:,2), "double");
+
 fwrite(fid, ushortClutValues(1,:)', "uint16");
 fwrite(fid, ushortClutValues(2,:)', "uint16");
 fwrite(fid, ushortClutValues(3,:)', "uint16");
