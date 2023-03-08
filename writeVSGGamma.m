@@ -1,9 +1,10 @@
-function [clutValues] = writeVSGGamma(calfile, bg)
-% writeVSGGamma
+function [clutValues] = writeVSGGamma(calfile, bg, gammaMethod)
+% writeVSGGamma(calfile, bg, gammaMethod)
 %
 % Reads a calibration file, then generates inverse-gamma table values, as
 % well as a set of 5 colors that define a DKL isolumunant plane ("white 
-% point", extremes along rg-axis, and along s-axis. The points are written
+% point", extremes along rg-axis, and along s-axis), and the color vectors
+% that describe cone-isolating grating. The points are written
 % first, as rgb values in [0,1]. The inv gamma table is written as 16384
 % unsigned short, values between 0 and 65534 (2^16-2 - this confirmed in 
 % email from CRS)
@@ -27,7 +28,7 @@ function [clutValues] = writeVSGGamma(calfile, bg)
 % you have a supported radiometer.
 [ frompath, basename, ext] = fileparts(calfile);
 fprintf(1,'\nLoading cal \"%s\" from folder %s\n', basename, frompath);
-commandwindow;
+%commandwindow;
 cal = LoadCalFile(basename, [], frompath);
     
 S               = cal.S_device;
@@ -45,12 +46,6 @@ DescribeMonCal(calStructOBJ);
 %% Gamma correction 
 % Set inversion method.  See SetGammaMethod for information on available
 % methods.
-defaultGammaMethod = 0;
-commandwindow;
-gammaMethod = input(sprintf('Enter gamma method [%d]:',defaultGammaMethod));
-if (isempty(gammaMethod))
-    gammaMethod = defaultGammaMethod;
-end
 calStructOBJ = SetGammaMethod(calStructOBJ,gammaMethod);
              
 % Make the desired linear output, then convert.
@@ -68,47 +63,47 @@ ushortClutValues = uint16( uint32(clutValues * 65535) );
 ushortClutValues(find(ushortClutValues>65534)) = 65534;
 
 
-% Make a plot of the inverse lookup table.
-figure; clf;
-subplot(1,3,1); hold on
-plot(linearValues,clutValues(1,:)','r');
-axis([0 1 0 1]); axis('square');
-xlabel('Linear output');
-ylabel('Input value');
-title('Inverse Gamma');
-subplot(1,3,2); hold on
-plot(linearValues,clutValues(2,:)','g');
-axis([0 1 0 1]); axis('square');
-xlabel('Linear output');
-ylabel('Input value');
-title('Inverse Gamma');
-subplot(1,3,3); hold on
-plot(linearValues,clutValues(3,:)','b');
-axis([0 1 0 1]); axis('square');
-xlabel('Linear output');
-ylabel('Input value');
-title('Inverse Gamma');
-
-% Make a plot of the obtained linear values.
-figure; clf;
-subplot(1,3,1); hold on
-plot(linearValues,predValues(1,:)','r');
-axis([0 1 0 1]); axis('square');
-xlabel('Desired value');
-ylabel('Predicted value');
-title('Gamma Correction');
-subplot(1,3,2); hold on
-plot(linearValues,predValues(2,:)','g');
-axis([0 1 0 1]); axis('square');
-xlabel('Desired value');
-ylabel('Predicted value');
-title('Gamma Correction');
-subplot(1,3,3); hold on
-plot(linearValues,predValues(3,:)','b');
-axis([0 1 0 1]); axis('square');
-xlabel('Desired value');
-ylabel('Predicted value');
-title('Gamma Correction');
+% % Make a plot of the inverse lookup table.
+% figure; clf;
+% subplot(1,3,1); hold on
+% plot(linearValues,clutValues(1,:)','r');
+% axis([0 1 0 1]); axis('square');
+% xlabel('Linear output');
+% ylabel('Input value');
+% title('Inverse Gamma');
+% subplot(1,3,2); hold on
+% plot(linearValues,clutValues(2,:)','g');
+% axis([0 1 0 1]); axis('square');
+% xlabel('Linear output');
+% ylabel('Input value');
+% title('Inverse Gamma');
+% subplot(1,3,3); hold on
+% plot(linearValues,clutValues(3,:)','b');
+% axis([0 1 0 1]); axis('square');
+% xlabel('Linear output');
+% ylabel('Input value');
+% title('Inverse Gamma');
+% 
+% % Make a plot of the obtained linear values.
+% figure; clf;
+% subplot(1,3,1); hold on
+% plot(linearValues,predValues(1,:)','r');
+% axis([0 1 0 1]); axis('square');
+% xlabel('Desired value');
+% ylabel('Predicted value');
+% title('Gamma Correction');
+% subplot(1,3,2); hold on
+% plot(linearValues,predValues(2,:)','g');
+% axis([0 1 0 1]); axis('square');
+% xlabel('Desired value');
+% ylabel('Predicted value');
+% title('Gamma Correction');
+% subplot(1,3,3); hold on
+% plot(linearValues,predValues(3,:)','b');
+% axis([0 1 0 1]); axis('square');
+% xlabel('Desired value');
+% ylabel('Predicted value');
+% title('Gamma Correction');
 
 
 %% load cmf for cones and luminance
