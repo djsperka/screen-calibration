@@ -1,7 +1,7 @@
 # screen-calibration
 
 Usrey Lab screen calibration steps. 
-Notes about [restoring PR650 ICM card here](/pr650).
+Notes about [restoring PR650 ICM card here](pr650.md).
 
 ## Install PsychToolbox
 
