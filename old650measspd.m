@@ -1,4 +1,4 @@
-function [spd, qual] = old650measspd()
+function [spd, qual] = old650measspd(S,syncMode)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -10,8 +10,8 @@ if isempty(g_650) || ~isvalid(g_650)
 end
 
 % only use these parameters. 
-S = [380 5 81];
-syncMode = 'on';
+% S = [380 5 81];
+% syncMode = 'on';
 
 % TODO set sync mode
 syncFreq = 0;
