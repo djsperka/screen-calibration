@@ -1,4 +1,4 @@
-function [readStr] = myPR650rawspd(timeout)
+function [readStr] = old650rawspd(timeout)
 %MYPR650RAWSPD Summary of this function goes here
 %   Detailed explanation goes here
 global g_650;
