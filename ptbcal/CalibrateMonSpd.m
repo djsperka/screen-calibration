@@ -253,6 +253,18 @@ if isempty(newFileName)
     newFileName = defaultFileName;
 end
 
+% sync mode
+iSyncDefault = 0;
+iSync = input(sprintf('Use spectrometer syncMode? (1 for yes, 0 for no) [%g]: ', iSyncDefault));
+if isempty(iSync)
+    iSync = iSyncDefault;
+end
+if iSync
+    syncMode = 'on';
+else
+    syncMode = 'off';
+end
+
 % Fitting parameters
 cal.describe.gamma.fitType = 'crtPolyLinear';
 cal.describe.gamma.contrastThresh = 0.001;
@@ -271,11 +283,11 @@ ClockRandSeed;
 
 % Calibrate monitor
 USERPROMPT = 1;
-cal = CalibrateMonDrvr(cal, USERPROMPT, whichMeterType, blankOtherScreen);
+cal = CalibrateMonDrvr(cal, USERPROMPT, whichMeterType, blankOtherScreen, syncMode);
 
 % Calibrate ambient
 USERPROMPT = 0;
-cal = CalibrateAmbDrvr(cal, USERPROMPT, whichMeterType, blankOtherScreen);
+cal = CalibrateAmbDrvr(cal, USERPROMPT, whichMeterType, blankOtherScreen, syncMode);
 
 % Signal end 
 Beeper; WaitSecs(.75);
