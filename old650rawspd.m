@@ -14,9 +14,10 @@ flush(g_650);
 % Make measurement
 writeline(g_650, 'M5');
 
-% get response, allow 2 minutes for measurement. This may need adjustment
+% get response, allow 1 minute for measurement. This may need adjustment
 % if the number of samples is changed. 
-readStr = old650getresult(120);
+% The number of lines expected is 103 - always the case for a measurement.
+readStr = old650getresult(60, 103);
 if length(readStr) == 0
   error('No response after measure command');
 end
