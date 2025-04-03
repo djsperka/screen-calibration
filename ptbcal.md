@@ -69,3 +69,48 @@ The queries and their meanings:
   <dd>Will spectrometer try to sync to monitor's refresh? For CRT, enter 1 (yes). For flat screen LCD/LED, enter 0 (no).</dd>
 </dl>
 
+Two plots are displayed when the process is complete. The gamma plot *should* have a curve to it. This is the output on a screen with NO gamma correction.
+
+![phosphors for each gun](./ptbcal/eeg-asus-2-phosphor.png)
+
+![raw lum values for each gun](./ptbcal/eeg-asus-2-gamma.png)
+
+
+## Validation
+
+This process will open a full screen window linearized by the above process, present a series of full-screen color patches, and measure the luminance of each. The resulting luminances (one each for the red, blue, and green guns, and one for rgb combined) are plotted and a straight-line fit is superimposed on the values. 
+
+```
+>> [lumR,lumG,lumB,lumW] = validatePTBGamma(1, '/data/cal/eeg-asus-2.mat');
+
+-------CUTCUTCUTCUT----------------
+
+Background color is [0.500000]
+Use floating point range 0.0-1.0 for colors in this window.
+
+Loading cal "eeg-asus-2" from folder /data/cal
+Inverse gamma loaded and in use for this window.
+Pausing for 5 sec...
+
+Got qual code of 0.
+1/44 color (0.000000,0.100000,0.000000), qual 0 lum 12.405315
+Got qual code of 0.
+2/44 color (0.000000,0.400000,0.000000), qual 0 lum 49.567064
+Got qual code of 0.
+3/44 color (0.600000,0.600000,0.600000), qual 0 lum 106.764642
+Got qual code of 0.
+
+-------CUTCUTCUTCUT----------------
+
+42/44 color (0.400000,0.400000,0.400000), qual 0 lum 71.300391
+Got qual code of 0.
+43/44 color (0.000000,0.000000,0.300000), qual 0 lum 4.545154
+Got qual code of 18.
+44/44 color (0.000000,0.000000,0.000000), qual 18 lum 0.388196
+>> 
+```
+
+A plot of the luminances measured on the screen when using the inverse gamma table is shown. We expect these lines to be straight, or very nearly so. 
+The points shown are the actual measurements, and the line is the result of a simple linear fit (polyfit).
+
+![validation plot](./ptbcal/eeg-asus-2-validate.png)
