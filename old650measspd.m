@@ -15,7 +15,7 @@ end
 
 % TODO set sync mode
 syncFreq = 0;
-if syncMode == 'on'
+if strcmp(lower(syncMode), 'on')
     syncFreq = old650getsyncfreq();
     if isempty(syncFreq)
         fprintf('Cannot sync, will measure without sync\n');
