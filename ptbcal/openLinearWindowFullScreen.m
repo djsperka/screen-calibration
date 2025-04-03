@@ -2,7 +2,8 @@ function [windowIndex, windowRect] = openLinearWindowFullScreen(screen, calfile,
 %openLinearWindowFullScreen Opens a full screen window with an inverse
 %gamma table taken from the calfile. If all goes well, this screen will
 %provide linear outputs. If b255 is true, use r,g,b color values in the
-%range 0-255. If b255 is false (the default), colors use the range 0-1.
+%range 0-255. If b255 is false (the default), colors use the range 0-1. The
+%background color can be a single scalar value or a color triplet. 
 %   Detailed explanation goes here
 
     arguments
