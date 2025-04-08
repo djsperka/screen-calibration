@@ -7,19 +7,21 @@ function [lumR,lumG,lumB,lumW] = validateVSGGamma()
 pause('on');
 
 % load files of constants
-load T_cones_ss2
-load T_ss2000_Y2
-S_cones = S_cones_ss2;
-T_cones = T_cones_ss2;
-T_Y = 683*T_ss2000_Y2;
-S_Y = S_ss2000_Y2;
+% load T_cones_ss2
+% load T_ss2000_Y2
+% S_cones = S_cones_ss2;
+% T_cones = T_cones_ss2;
+% T_Y = 683*T_ss2000_Y2;
+% S_Y = S_ss2000_Y2;
+% 
+% % Assuming old650, which gives us its spd with [390 5 81]
+% % Use this to compute lum from spd. 
+% T_Y81 = SplineCmf(S_Y,T_Y,[390 5 81]);
 
-% Assuming old650, which gives us its spd with [390 5 81]
-% Use this to compute lum from spd. 
-T_Y81 = SplineCmf(S_Y,T_Y,[390 5 81]);
+ [S,T] = getLumTS(); 
 
 % values to test
-values = [0:.1:1]';
+values = (0:.1:1)';
 r=zeros(length(values),3);
 g=zeros(length(values),3);
 b=zeros(length(values),3);
@@ -32,8 +34,8 @@ w(:,2) = values;
 w(:,3) = values;
 
 
-fprintf(1,'Pausing for 10 sec...');
-pause(10);
+fprintf(1,'Pausing for 5 sec...');
+pause(5);
 
 % talk to fixstim. Should check response HELLO. TODO.
 fprintf(1, 'Connect to fixstim control port...\n');
@@ -55,10 +57,10 @@ configureTerminator(tcp, 59, 59);
 resp = char(readline(tcp));
 fprintf(1, 'tcp connection resp: %s\n', resp);
 
-lumR = measure_lum(tcp, r, T_Y81);
-lumG = measure_lum(tcp, g, T_Y81);
-lumB = measure_lum(tcp, b, T_Y81);
-lumW = measure_lum(tcp, w, T_Y81);
+lumR = measure_lum(tcp, r, S, T);
+lumG = measure_lum(tcp, g, S, T);
+lumB = measure_lum(tcp, b, S, T);
+lumW = measure_lum(tcp, w, S, T);
 
 % quit connection to fixstim
 writeline(tcp, 'quit');
@@ -76,7 +78,7 @@ hold off;
 end
 
 
-function [lum] = measure_lum(tcp, colors, T)
+function [lum] = measure_lum(tcp, colors, S, T)
 
     lum = zeros(size(colors, 1), 1);
     for i=1:size(colors, 1)
@@ -86,7 +88,7 @@ function [lum] = measure_lum(tcp, colors, T)
         writeline(tcp, cmd);
         resp = char(readline(tcp));
         pause(0.5);
-        [spd, qual] = old650measspd();
+        [spd, qual] = old650measspd(S, 'on');
         lum(i) = T * spd;
         fprintf(1, 'color %s, resp %s lum %f\n', cmd, resp, lum(i));
     

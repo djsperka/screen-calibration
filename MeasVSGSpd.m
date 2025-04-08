@@ -48,7 +48,7 @@ for i = 1:nMeas
 
     % Measure spectrum
     if (whichMeterType == 1)
-        spd(:, i) = old650measspd();
+        spd(:, i) = old650measspd(S,'on');
     else
         spd(:,i) = MeasSpd(S, whichMeterType, syncMode);
     end
