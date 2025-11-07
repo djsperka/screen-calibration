@@ -43,7 +43,11 @@ function [windowIndex, windowRect] = openLinearWindowFullScreen(screen, calfile,
     cal = myLoadCalFile(calfile);
 
     % inverse gamma
-    igamma = InvertGammaTable(cal.gammaInput, cal.gammaTable, 1024);
+    precision = 1024; % for linux
+    if IsWin()
+        precision = 256;
+    end
+    igamma = InvertGammaTable(cal.gammaInput, cal.gammaTable, precision);
 
     % now load inverse gamma table
     Screen('LoadNormalizedGammaTable', windowIndex, igamma, 0);
